@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Upgraded Food App</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1, h2 {
+      text-align: center;
+    }
+
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 30px;
+    }
+
+    .food-item {
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      width: 200px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    .food-item button {
+      margin-top: 10px;
+      padding: 8px 12px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .food-item button:hover {
+      background-color: #218838;
+    }
+
+    .cart {
+      background: white;
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      align-items: center;
+    }
+
+    .cart-item button {
+      background-color: #dc3545;
+      border: none;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .cart-item button:hover {
+      background-color: #c82333;
+    }
+
+    .quantity-controls {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .quantity-controls button {
+      background-color: #007bff;
+      padding: 4px 8px;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+    }
+
+    .quantity-controls button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🍱 Food Order App</h1>
+
+  <div class="container" id="food-list"></div>
+
+  <div class="cart">
+    <h2>Your Cart</h2>
+    <div id="cart-items"></div>
+    <h3>Total: $<span id="total">0.00</span></h3>
+  </div>
+
+  <script>
+    const foods = [
+      { id: 1, name: "Pizza", price: 8.99 },
+      { id: 2, name: "Burger", price: 5.49 },
+      { id: 3, name: "Sushi", price: 12.99 },
+      { id: 4, name: "Salad", price: 6.75 },
+      { id: 5, name: "Pasta", price: 7.99 },
+      { id: 6, name: "Tacos", price: 4.50 },
+    ];
+
+    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+    const foodList = document.getElementById("food-list");
+    const cartItems = document.getElementById("cart-items");
+    const totalSpan = document.getElementById("total");
+
+    function renderFoods() {
+      foodList.innerHTML = "";
+      foods.forEach(food => {
+        const div = document.createElement("div");
+        div.className = "food-item";
+        div.innerHTML = `
+          <h3>${food.name}</h3>
+          <p>$${food.price.toFixed(2)}</p>
+          <button onclick="addToCart(${food.id})">Add to Cart</button>
+        `;
+        foodList.appendChild(div);
+      });
+    }
+
+    function addToCart(foodId) {
+      const existing = cart.find(item => item.id === foodId);
+      if (existing) {
+        existing.quantity++;
+      } else {
+        const food = foods.find(f => f.id === foodId);
+        cart.push({ ...food, quantity: 1 });
+      }
+      saveCart();
+      renderCart();
+    }
+
+    function updateQuantity(id, change) {
+      const item = cart.find(i => i.id === id);
+      if (item) {
+        item.quantity += change;
+        if (item.quantity <= 0) {
+          removeFromCart(id);
+        } else {
+          saveCart();
+          renderCart();
+        }
+      }
+    }
+
+    function removeFromCart(id) {
+      cart = cart.filter(item => item.id !== id);
+      saveCart();
+      renderCart();
+    }
+
+    function renderCart() {
+      cartItems.innerHTML = "";
+      let total = 0;
+      cart.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "cart-item";
+        div.innerHTML = `
+          <div>
+            ${item.name} - $${item.price.toFixed(2)} × ${item.quantity}
+          </div>
+          <div class="quantity-controls">
+            <button onclick="updateQuantity(${item.id}, -1)">−</button>
+            <span>${item.quantity}</span>
+            <button onclick="updateQuantity(${item.id}, 1)">+</button>
+            <button onclick="removeFromCart(${item.id})">Remove</button>
+          </div>
+        `;
+        cartItems.appendChild(div);
+        total += item.price * item.quantity;
+      });
+      totalSpan.textContent = total.toFixed(2);
+    }
+
+    function saveCart() {
+      localStorage.setItem("cart", JSON.stringify(cart));
+    }
+
+    renderFoods();
+    renderCart();
+  </script>
+</body>
+</html>
